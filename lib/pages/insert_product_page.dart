@@ -29,73 +29,80 @@ class _InsertProductPageState extends State<InsertProductPage> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Adicion de producto')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              TextFormField(
-                controller: _codigoController,
-                decoration: InputDecoration(labelText: 'Código'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa el código';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _nombreController,
-                decoration: InputDecoration(labelText: 'Nombre'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa el nombre';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _precioController,
-                decoration: InputDecoration(labelText: 'Precio'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa el precio';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _existenciasController,
-                decoration: InputDecoration(labelText: 'Existencias'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa las existencias';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _descripcionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa la descripción';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: Text('Agregar Producto'),
-              ),
-            ],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if(didPop) return;
+        goToTabPage();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text('Adicion de producto')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                TextFormField(
+                  controller: _codigoController,
+                  decoration: InputDecoration(labelText: 'Código'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa el código';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _nombreController,
+                  decoration: InputDecoration(labelText: 'Nombre'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa el nombre';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _precioController,
+                  decoration: InputDecoration(labelText: 'Precio'),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa el precio';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _existenciasController,
+                  decoration: InputDecoration(labelText: 'Existencias'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa las existencias';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _descripcionController,
+                  decoration: InputDecoration(labelText: 'Descripción'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa la descripción';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Agregar Producto'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -109,16 +116,62 @@ class _InsertProductPageState extends State<InsertProductPage> {
       final existencias = int.parse(_existenciasController.text);
       final descripcion = _descripcionController.text;
 
-      final product = ProductDto(
-        codigoProducto: codigo,
-        descripcion: descripcion,
-        existencias: existencias,
-        fechaIngreso: DateTime.now(),
-        nombre: nombre,
-        precio: precio
-      );
-
-      _insertProductsService.addProductToDatabase(product);
+      try{
+        final product = ProductDto(
+            codigoProducto: codigo,
+            descripcion: descripcion,
+            existencias: existencias,
+            fechaIngreso: DateTime.now(),
+            nombre: nombre,
+            precio: precio
+        );
+        _insertProductsService.addProductToDatabase(product);
+        _showAlertDialog(context, "EXITO", "Se ha registrado el producto de manera exitosa",Colors.green, goToTabPage);
+      }catch(e){
+        print("HA OCURRIDO UN ERROR");
+      }
     }
+  }
+
+  void goToTabPage() {
+    print('INVOCANDO METODO DE RETORNO');
+    Navigator.pop(context, 'reload');
+  }
+  Future<void> _showAlertDialog(BuildContext context, String title, String textContent, Color color, void Function() funcion) async {
+    Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.of(context).pop();
+        funcion();
+      },
+    );
+
+    // Configura el diálogo
+    AlertDialog alert = AlertDialog(
+      title: Text(title, style: TextStyle(fontSize: 20.0),),
+      content: Text(textContent),
+      actions: [
+        okButton,
+      ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+      ),
+      backgroundColor: Colors.white,
+      titleTextStyle: TextStyle(
+        color: color,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+      contentTextStyle: TextStyle(
+        color: Colors.black,
+        fontSize: 16,
+      ),
+    );
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 }

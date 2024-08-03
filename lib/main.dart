@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:productos/database/database.dart';
 import 'package:productos/pages/insert_product_page.dart';
 import 'package:productos/pages/tab_products_page.dart';
+import 'package:productos/router/routes.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
@@ -43,14 +44,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
       ),
-      routes: {
-        '/insert_product': (context) => InsertProductPage(),
-        '/tab_list_products': (context) => TabProductsPage(),
-      },
-      initialRoute: '/tab_list_products',
+      routes: AppRoutes.routes,
+      initialRoute: AppRoutes.initialRoute,
     );
   }
 }
