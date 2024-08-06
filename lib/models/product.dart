@@ -7,6 +7,7 @@ class Products extends Table{
   IntColumn get existencias => integer().named('existencias')();
   TextColumn get descripcion => text().named('descripcion')();
   IntColumn get isAvailable => integer().named('is_available')();
+  TextColumn get marca=> text().nullable().named('marca')();
   DateTimeColumn get fechaIngreso => dateTime().nullable().named('fecha_ingreso')();
   @override
   Set<Column> get primaryKey => {codigo};

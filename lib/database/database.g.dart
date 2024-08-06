@@ -44,6 +44,11 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   late final GeneratedColumn<int> isAvailable = GeneratedColumn<int>(
       'is_available', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _marcaMeta = const VerificationMeta('marca');
+  @override
+  late final GeneratedColumn<String> marca = GeneratedColumn<String>(
+      'marca', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _fechaIngresoMeta =
       const VerificationMeta('fechaIngreso');
   @override
@@ -58,6 +63,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         existencias,
         descripcion,
         isAvailable,
+        marca,
         fechaIngreso
       ];
   @override
@@ -110,6 +116,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     } else if (isInserting) {
       context.missing(_isAvailableMeta);
     }
+    if (data.containsKey('marca')) {
+      context.handle(
+          _marcaMeta, marca.isAcceptableOrUnknown(data['marca']!, _marcaMeta));
+    }
     if (data.containsKey('fecha_ingreso')) {
       context.handle(
           _fechaIngresoMeta,
@@ -137,6 +147,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           .read(DriftSqlType.string, data['${effectivePrefix}descripcion'])!,
       isAvailable: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}is_available'])!,
+      marca: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}marca']),
       fechaIngreso: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}fecha_ingreso']),
     );
@@ -155,6 +167,7 @@ class Product extends DataClass implements Insertable<Product> {
   final int existencias;
   final String descripcion;
   final int isAvailable;
+  final String? marca;
   final DateTime? fechaIngreso;
   const Product(
       {required this.codigo,
@@ -163,6 +176,7 @@ class Product extends DataClass implements Insertable<Product> {
       required this.existencias,
       required this.descripcion,
       required this.isAvailable,
+      this.marca,
       this.fechaIngreso});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -173,6 +187,9 @@ class Product extends DataClass implements Insertable<Product> {
     map['existencias'] = Variable<int>(existencias);
     map['descripcion'] = Variable<String>(descripcion);
     map['is_available'] = Variable<int>(isAvailable);
+    if (!nullToAbsent || marca != null) {
+      map['marca'] = Variable<String>(marca);
+    }
     if (!nullToAbsent || fechaIngreso != null) {
       map['fecha_ingreso'] = Variable<DateTime>(fechaIngreso);
     }
@@ -187,6 +204,8 @@ class Product extends DataClass implements Insertable<Product> {
       existencias: Value(existencias),
       descripcion: Value(descripcion),
       isAvailable: Value(isAvailable),
+      marca:
+          marca == null && nullToAbsent ? const Value.absent() : Value(marca),
       fechaIngreso: fechaIngreso == null && nullToAbsent
           ? const Value.absent()
           : Value(fechaIngreso),
@@ -203,6 +222,7 @@ class Product extends DataClass implements Insertable<Product> {
       existencias: serializer.fromJson<int>(json['existencias']),
       descripcion: serializer.fromJson<String>(json['descripcion']),
       isAvailable: serializer.fromJson<int>(json['isAvailable']),
+      marca: serializer.fromJson<String?>(json['marca']),
       fechaIngreso: serializer.fromJson<DateTime?>(json['fechaIngreso']),
     );
   }
@@ -216,6 +236,7 @@ class Product extends DataClass implements Insertable<Product> {
       'existencias': serializer.toJson<int>(existencias),
       'descripcion': serializer.toJson<String>(descripcion),
       'isAvailable': serializer.toJson<int>(isAvailable),
+      'marca': serializer.toJson<String?>(marca),
       'fechaIngreso': serializer.toJson<DateTime?>(fechaIngreso),
     };
   }
@@ -227,6 +248,7 @@ class Product extends DataClass implements Insertable<Product> {
           int? existencias,
           String? descripcion,
           int? isAvailable,
+          Value<String?> marca = const Value.absent(),
           Value<DateTime?> fechaIngreso = const Value.absent()}) =>
       Product(
         codigo: codigo ?? this.codigo,
@@ -235,6 +257,7 @@ class Product extends DataClass implements Insertable<Product> {
         existencias: existencias ?? this.existencias,
         descripcion: descripcion ?? this.descripcion,
         isAvailable: isAvailable ?? this.isAvailable,
+        marca: marca.present ? marca.value : this.marca,
         fechaIngreso:
             fechaIngreso.present ? fechaIngreso.value : this.fechaIngreso,
       );
@@ -249,6 +272,7 @@ class Product extends DataClass implements Insertable<Product> {
           data.descripcion.present ? data.descripcion.value : this.descripcion,
       isAvailable:
           data.isAvailable.present ? data.isAvailable.value : this.isAvailable,
+      marca: data.marca.present ? data.marca.value : this.marca,
       fechaIngreso: data.fechaIngreso.present
           ? data.fechaIngreso.value
           : this.fechaIngreso,
@@ -264,6 +288,7 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('existencias: $existencias, ')
           ..write('descripcion: $descripcion, ')
           ..write('isAvailable: $isAvailable, ')
+          ..write('marca: $marca, ')
           ..write('fechaIngreso: $fechaIngreso')
           ..write(')'))
         .toString();
@@ -271,7 +296,7 @@ class Product extends DataClass implements Insertable<Product> {
 
   @override
   int get hashCode => Object.hash(codigo, nombre, precio, existencias,
-      descripcion, isAvailable, fechaIngreso);
+      descripcion, isAvailable, marca, fechaIngreso);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -282,6 +307,7 @@ class Product extends DataClass implements Insertable<Product> {
           other.existencias == this.existencias &&
           other.descripcion == this.descripcion &&
           other.isAvailable == this.isAvailable &&
+          other.marca == this.marca &&
           other.fechaIngreso == this.fechaIngreso);
 }
 
@@ -292,6 +318,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<int> existencias;
   final Value<String> descripcion;
   final Value<int> isAvailable;
+  final Value<String?> marca;
   final Value<DateTime?> fechaIngreso;
   const ProductsCompanion({
     this.codigo = const Value.absent(),
@@ -300,6 +327,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.existencias = const Value.absent(),
     this.descripcion = const Value.absent(),
     this.isAvailable = const Value.absent(),
+    this.marca = const Value.absent(),
     this.fechaIngreso = const Value.absent(),
   });
   ProductsCompanion.insert({
@@ -309,6 +337,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     required int existencias,
     required String descripcion,
     required int isAvailable,
+    this.marca = const Value.absent(),
     this.fechaIngreso = const Value.absent(),
   })  : nombre = Value(nombre),
         precio = Value(precio),
@@ -322,6 +351,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<int>? existencias,
     Expression<String>? descripcion,
     Expression<int>? isAvailable,
+    Expression<String>? marca,
     Expression<DateTime>? fechaIngreso,
   }) {
     return RawValuesInsertable({
@@ -331,6 +361,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (existencias != null) 'existencias': existencias,
       if (descripcion != null) 'descripcion': descripcion,
       if (isAvailable != null) 'is_available': isAvailable,
+      if (marca != null) 'marca': marca,
       if (fechaIngreso != null) 'fecha_ingreso': fechaIngreso,
     });
   }
@@ -342,6 +373,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       Value<int>? existencias,
       Value<String>? descripcion,
       Value<int>? isAvailable,
+      Value<String?>? marca,
       Value<DateTime?>? fechaIngreso}) {
     return ProductsCompanion(
       codigo: codigo ?? this.codigo,
@@ -350,6 +382,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       existencias: existencias ?? this.existencias,
       descripcion: descripcion ?? this.descripcion,
       isAvailable: isAvailable ?? this.isAvailable,
+      marca: marca ?? this.marca,
       fechaIngreso: fechaIngreso ?? this.fechaIngreso,
     );
   }
@@ -375,6 +408,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (isAvailable.present) {
       map['is_available'] = Variable<int>(isAvailable.value);
     }
+    if (marca.present) {
+      map['marca'] = Variable<String>(marca.value);
+    }
     if (fechaIngreso.present) {
       map['fecha_ingreso'] = Variable<DateTime>(fechaIngreso.value);
     }
@@ -390,6 +426,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('existencias: $existencias, ')
           ..write('descripcion: $descripcion, ')
           ..write('isAvailable: $isAvailable, ')
+          ..write('marca: $marca, ')
           ..write('fechaIngreso: $fechaIngreso')
           ..write(')'))
         .toString();
@@ -807,6 +844,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required int existencias,
   required String descripcion,
   required int isAvailable,
+  Value<String?> marca,
   Value<DateTime?> fechaIngreso,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
@@ -816,6 +854,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<int> existencias,
   Value<String> descripcion,
   Value<int> isAvailable,
+  Value<String?> marca,
   Value<DateTime?> fechaIngreso,
 });
 
@@ -842,6 +881,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<int> existencias = const Value.absent(),
             Value<String> descripcion = const Value.absent(),
             Value<int> isAvailable = const Value.absent(),
+            Value<String?> marca = const Value.absent(),
             Value<DateTime?> fechaIngreso = const Value.absent(),
           }) =>
               ProductsCompanion(
@@ -851,6 +891,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             existencias: existencias,
             descripcion: descripcion,
             isAvailable: isAvailable,
+            marca: marca,
             fechaIngreso: fechaIngreso,
           ),
           createCompanionCallback: ({
@@ -860,6 +901,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             required int existencias,
             required String descripcion,
             required int isAvailable,
+            Value<String?> marca = const Value.absent(),
             Value<DateTime?> fechaIngreso = const Value.absent(),
           }) =>
               ProductsCompanion.insert(
@@ -869,6 +911,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             existencias: existencias,
             descripcion: descripcion,
             isAvailable: isAvailable,
+            marca: marca,
             fechaIngreso: fechaIngreso,
           ),
         ));
@@ -904,6 +947,11 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<int> get isAvailable => $state.composableBuilder(
       column: $state.table.isAvailable,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get marca => $state.composableBuilder(
+      column: $state.table.marca,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
@@ -957,6 +1005,11 @@ class $$ProductsTableOrderingComposer
 
   ColumnOrderings<int> get isAvailable => $state.composableBuilder(
       column: $state.table.isAvailable,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get marca => $state.composableBuilder(
+      column: $state.table.marca,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 

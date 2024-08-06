@@ -21,17 +21,17 @@ class _TabProductsPageState extends State<TabProductsPage> {
   @override
   void initState() {
     super.initState();
+    Log.i(ProductsPage.TAG, 'OBTENIENDO INFORMACION DE PRODUCTOS');
     final db = Provider.of<AppDb>(context, listen: false);
     _productsService = TabProductsService(db.productDao);
-    _productsFuture = _fetchProducts();
-    _initializeState();
+
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     Log.d(TabProductsPage.TAG,'Se va a recargar los datos');
-    _productsFuture = _fetchProducts();
+    _initializeState();
   }
 
   @override
@@ -102,8 +102,7 @@ class _TabProductsPageState extends State<TabProductsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result =
-              await _productsService.navigateInsertProductPage(context);
+          final result = await Navigator.pushNamed(context, '/insert_product');;
           if (result == 'reload') {
             print("RECARGANDO LISTA DE PRODUCTOS");
             setState(() {
@@ -117,13 +116,11 @@ class _TabProductsPageState extends State<TabProductsPage> {
   }
 
   Future<List<ProductDto>> _fetchProducts() async {
-    return await _productsService.getAllProducts();
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+    return await _productsService.getProductsByBrand(args['marca']!);
   }
 
   void _initializeState() {
-    print("OBTENIENDO INFORMACION DE PRODUCTOS");
-    final db = Provider.of<AppDb>(context, listen: false);
-    _productsService = TabProductsService(db.productDao);
     _productsFuture = _fetchProducts();
   }
 

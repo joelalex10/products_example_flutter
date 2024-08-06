@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:productos/database/database.dart';
+import 'package:productos/dto/marca_list_dto.dart';
 import 'package:productos/dto/product_dto.dart';
 import 'package:productos/models/product.dart';
 import 'package:productos/util/log.dart';
@@ -26,7 +27,7 @@ class ProductDao extends DatabaseAccessor<AppDb> with _$ProductDaoMixin {
     return into(products).insert(productCompanion);
   }
 
-  Future<List<ProductDto>> selectAllProducts() async {
+  Future<List<ProductDto>?> selectAllProducts() async {
     Log.i(TAG, 'Seleccionando todos los productos');
     try {
       final result = await (select(products).get());
@@ -44,10 +45,50 @@ class ProductDao extends DatabaseAccessor<AppDb> with _$ProductDaoMixin {
       }).toList();
     } catch (e) {
       Log.e(TAG, 'Error seleccionando productos: $e');
-      return [];
+      return null;
     }
   }
-
+  Future<List<ProductDto>?> selectProductsByBrand(String brand) async {
+    Log.i(TAG, 'Seleccionando los productos por la marca $brand');
+    try {
+      final result = await (select(products)
+        ..where((t) => t.marca.equals(brand))
+      ).get();
+      Log.i(TAG, '${result.length} productos encontrados');
+      return result.map((row) {
+        return ProductDto(
+          codigoProducto: row.codigo,
+          nombre: row.nombre,
+          precio: row.precio,
+          existencias: row.existencias,
+          descripcion: row.descripcion,
+          fechaIngreso: row.fechaIngreso!,
+          isAvailable: row.isAvailable,
+        );
+      }).toList();
+    } catch (e) {
+      Log.e(TAG, 'Error seleccionando productos: $e');
+      return null;
+    }
+  }
+  Future<List<MarcaListDto>> selectTotalProductsByBrand() async {
+    Log.i(TAG, 'Se seleccionaran los productos por la marca');
+    final marcaAlias = products.marca;
+    final countAlias = products.codigo.count();
+    final query = await selectOnly(products)
+      ..addColumns([
+        marcaAlias,
+        countAlias,
+      ])
+      ..groupBy([products.marca]);
+    final result = await query.map((row) {
+      return MarcaListDto(
+          marcaProducto: row.read(marcaAlias)!,
+          totalProductos: row.read(countAlias)!
+      );
+    }).get();
+    return result;
+  }
   Future<bool> updateIsAvailable(int codigo, int isAvailable) async {
     Log.d(TAG, 'Actualizando disponibilidad con codigo: $codigo, isAvailable: $isAvailable');
     try {

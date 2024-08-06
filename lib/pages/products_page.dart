@@ -5,6 +5,7 @@ import 'package:productos/dto/product_dto.dart';
 import 'package:productos/services/product_service.dart';
 import 'package:productos/util/log.dart';
 import 'package:provider/provider.dart';
+
 class ProductsPage extends StatefulWidget {
   static const TAG = 'ProductsPage';
 
@@ -23,13 +24,7 @@ class _ProductsPageState extends State<ProductsPage> {
   Future<void> _updateAvailability(bool value) async {
     Log.d(ProductsPage.TAG, 'Actualizando disponibilidad a: $value');
     try {
-      await _productsService.updateAvailability(widget.product.codigoProducto, value ? 1 : 0)
-          .then((value){
-            setState(() {
-              widget.product.isAvailable = value ? 1 : 0;
-            });
-            }
-      );
+      await _productsService.updateAvailability(widget.product.codigoProducto, value ? 1 : 0);
       setState(() {
         isAvailable = value;
       });
