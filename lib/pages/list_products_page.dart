@@ -120,10 +120,16 @@ class _ListProductsPageState extends State<ListProductsPage> {
   }
 
   Future<void> goToTabPage(String marcaProducto) async {
-    await Navigator.pushNamed(context, '/tab_list_products',
+    final result = await Navigator.pushNamed(context, '/tab_list_products',
       arguments: {
         'marca': marcaProducto,
       },
     );
+    if (result == 'reload') {
+      print("RECARGANDO LISTA DE PRODUCTOS");
+      setState(() {
+        _marcasFuture = _fetchMarcas();
+      });
+    }
   }
 }

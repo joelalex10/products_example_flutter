@@ -41,76 +41,83 @@ class _TabProductsPageState extends State<TabProductsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Gestión de productos',
-          style: TextStyle(
-            fontSize: 20,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if(didPop) return;
+        goToListProductsPage();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Gestión de productos',
+            style: TextStyle(
+              fontSize: 20,
+            ),
           ),
         ),
-      ),
-      body: FutureBuilder<List<ProductDto>>(
-        future: _productsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              snapshot.data == null) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No se registraron productos'));
-          } else {
-            final products = snapshot.data!;
-            int count = 0;
-            return DefaultTabController(
-              length: products.length,
-              child: Column(
-                children: [
-                  TabBar(
-                    indicatorColor: Color(0xFF3F51B5),
-                    isScrollable: true,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    labelPadding: EdgeInsets.symmetric(horizontal: 30.0),
-                    tabs: products.map((consumer) {
-                      count++;
-                      return Tab(
-                        child: Text(
-                          '$count',
-                          style: TextStyle(
-                            color: _getTabTextColor(consumer),
+        body: FutureBuilder<List<ProductDto>>(
+          future: _productsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                snapshot.data == null) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              print('Error: ${snapshot.error}');
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No se registraron productos'));
+            } else {
+              final products = snapshot.data!;
+              int count = 0;
+              return DefaultTabController(
+                length: products.length,
+                child: Column(
+                  children: [
+                    TabBar(
+                      indicatorColor: Color(0xFF3F51B5),
+                      isScrollable: true,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelPadding: EdgeInsets.symmetric(horizontal: 30.0),
+                      tabs: products.map((consumer) {
+                        count++;
+                        return Tab(
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              color: _getTabTextColor(consumer),
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: products.map((product) {
-                        return SingleChildScrollView(
-                          child: ProductsPage(product: product),
                         );
                       }).toList(),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.pushNamed(context, '/insert_product');;
-          if (result == 'reload') {
-            print("RECARGANDO LISTA DE PRODUCTOS");
-            setState(() {
-              _productsFuture = _fetchProducts();
-            });
-          }
-        },
-        child: Icon(Icons.add),
+                    Expanded(
+                      child: TabBarView(
+                        children: products.map((product) {
+                          return SingleChildScrollView(
+                            child: ProductsPage(product: product),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.pushNamed(context, '/insert_product');;
+            if (result == 'reload') {
+              print("RECARGANDO LISTA DE PRODUCTOS");
+              setState(() {
+                _productsFuture = _fetchProducts();
+              });
+            }
+          },
+          child: Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -126,5 +133,11 @@ class _TabProductsPageState extends State<TabProductsPage> {
 
   Color _getTabTextColor(ProductDto product) {
     return product.isAvailable == 0 ? Colors.red : Colors.black;
+  }
+
+  void goToListProductsPage() {
+    Navigator.of(context).pop();
+    print('INVOCANDO METODO DE RETORNO');
+    Navigator.pop(context, 'reload');
   }
 }
