@@ -1,13 +1,15 @@
-class MarcaListDto{
+class MarcaListDto {
   String marcaProducto;
-  int totalProductos;
+  int totalProductosDisponibles;
+  int totalProductosNoDisponibles;
 
   MarcaListDto({
     required this.marcaProducto,
-    required this.totalProductos});
-
+    required this.totalProductosDisponibles,
+    required this.totalProductosNoDisponibles,
+  });
   @override
   String toString() {
-    return 'MarcaListDto{marcaProducto: $marcaProducto, totalProductos: $totalProductos}';
+    return 'MarcaListDto{marcaProducto: $marcaProducto, totalProductosDisponibles: $totalProductosDisponibles, totalProductosNoDisponibles: $totalProductosNoDisponibles}';
   }
 }

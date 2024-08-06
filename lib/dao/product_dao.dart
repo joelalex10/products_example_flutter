@@ -48,12 +48,19 @@ class ProductDao extends DatabaseAccessor<AppDb> with _$ProductDaoMixin {
       return null;
     }
   }
+
   Future<List<ProductDto>?> selectProductsByBrand(String brand) async {
     Log.i(TAG, 'Seleccionando los productos por la marca $brand');
     try {
-      final result = await (select(products)
-        ..where((t) => t.marca.equals(brand))
-      ).get();
+      final result =
+          await (select(products)
+            ..where((t) => t.marca.equals(brand))
+            ..orderBy([
+                  (t) => OrderingTerm(
+                  expression: t.isAvailable.equals(1),
+                  mode: OrderingMode.desc)
+            ])
+          ).get();
       Log.i(TAG, '${result.length} productos encontrados');
       return result.map((row) {
         return ProductDto(
@@ -71,30 +78,40 @@ class ProductDao extends DatabaseAccessor<AppDb> with _$ProductDaoMixin {
       return null;
     }
   }
+
   Future<List<MarcaListDto>> selectTotalProductsByBrand() async {
     Log.i(TAG, 'Se seleccionaran los productos por la marca');
     final marcaAlias = products.marca;
     final countAlias = products.codigo.count();
+    final registerProductAlias = products.isAvailable.count(
+        filter: products.isAvailable.equals(1)
+    );
     final query = await selectOnly(products)
       ..addColumns([
         marcaAlias,
         countAlias,
+        registerProductAlias
       ])
-      ..groupBy([products.marca]);
+      ..groupBy([products.marca])
+      ..orderBy(
+          [OrderingTerm(expression: countAlias, mode: OrderingMode.desc)]);
     final result = await query.map((row) {
       return MarcaListDto(
           marcaProducto: row.read(marcaAlias)!,
-          totalProductos: row.read(countAlias)!
+      totalProductosDisponibles: row.read(registerProductAlias)!,
+      totalProductosNoDisponibles:row.read(countAlias)! - row.read(registerProductAlias)!
       );
     }).get();
     return result;
   }
+
   Future<bool> updateIsAvailable(int codigo, int isAvailable) async {
-    Log.d(TAG, 'Actualizando disponibilidad con codigo: $codigo, isAvailable: $isAvailable');
+    Log.d(TAG,
+        'Actualizando disponibilidad con codigo: $codigo, isAvailable: $isAvailable');
     try {
       final result = await (update(products)
-        ..where((tbl) => tbl.codigo.equals(codigo))
-      ).write(ProductsCompanion(
+            ..where((tbl) => tbl.codigo.equals(codigo)))
+          .write(ProductsCompanion(
         isAvailable: Value(isAvailable),
       ));
       Log.i(TAG, 'Disponibilidad actualizada: $result');

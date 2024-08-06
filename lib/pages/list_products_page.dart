@@ -82,8 +82,9 @@ class _ListProductsPageState extends State<ListProductsPage> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Productos registrados: ${marca.totalProductos}',
-
+                                  Text('Productos disponibles: ${marca.totalProductosDisponibles}',
+                                  ),
+                                  Text('Productos no disponibles: ${marca.totalProductosNoDisponibles}',
                                   ),
                                 ],
                               ),
@@ -114,7 +115,7 @@ class _ListProductsPageState extends State<ListProductsPage> {
     if (query.isEmpty) {
       return await _listProductsService.getTotalProductsByBrand();
     } else {
-      return await _listProductsService.getTotalProductsByBrand();;
+      return await _listProductsService.getTotalProductsByBrand();
     }
   }
 
