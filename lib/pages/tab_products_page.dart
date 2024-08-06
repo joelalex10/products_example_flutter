@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:productos/database/database.dart';
 import 'package:productos/dto/product_dto.dart';
+import 'package:productos/pages/products_page.dart';
 import 'package:productos/services/tab_products_service.dart';
+import 'package:productos/util/log.dart';
 import 'package:provider/provider.dart';
 
 class TabProductsPage extends StatefulWidget {
+  static const TAG = 'TabProductsPage';
   const TabProductsPage({super.key});
 
   @override
@@ -27,6 +30,7 @@ class _TabProductsPageState extends State<TabProductsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    Log.d(TabProductsPage.TAG,'Se va a recargar los datos');
     _productsFuture = _fetchProducts();
   }
 
@@ -39,7 +43,8 @@ class _TabProductsPageState extends State<TabProductsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gestión de productos',
+        title: Text(
+          'Gestión de productos',
           style: TextStyle(
             fontSize: 20,
           ),
@@ -48,7 +53,8 @@ class _TabProductsPageState extends State<TabProductsPage> {
       body: FutureBuilder<List<ProductDto>>(
         future: _productsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              snapshot.data == null) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             print('Error: ${snapshot.error}');
@@ -63,19 +69,27 @@ class _TabProductsPageState extends State<TabProductsPage> {
               child: Column(
                 children: [
                   TabBar(
+                    indicatorColor: Color(0xFF3F51B5),
                     isScrollable: true,
                     indicatorSize: TabBarIndicatorSize.tab,
-                    labelPadding: EdgeInsets.symmetric(horizontal: 40.0),
+                    labelPadding: EdgeInsets.symmetric(horizontal: 30.0),
                     tabs: products.map((consumer) {
                       count++;
-                      return Tab(text: '$count');
+                      return Tab(
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            color: _getTabTextColor(consumer),
+                          ),
+                        ),
+                      );
                     }).toList(),
                   ),
                   Expanded(
                     child: TabBarView(
                       children: products.map((product) {
                         return SingleChildScrollView(
-                          child: Text(product.nombre),
+                          child: ProductsPage(product: product),
                         );
                       }).toList(),
                     ),
@@ -88,7 +102,8 @@ class _TabProductsPageState extends State<TabProductsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result =await _productsService.navigateInsertProductPage(context);
+          final result =
+              await _productsService.navigateInsertProductPage(context);
           if (result == 'reload') {
             print("RECARGANDO LISTA DE PRODUCTOS");
             setState(() {
@@ -110,5 +125,9 @@ class _TabProductsPageState extends State<TabProductsPage> {
     final db = Provider.of<AppDb>(context, listen: false);
     _productsService = TabProductsService(db.productDao);
     _productsFuture = _fetchProducts();
+  }
+
+  Color _getTabTextColor(ProductDto product) {
+    return product.isAvailable == 0 ? Colors.red : Colors.black;
   }
 }

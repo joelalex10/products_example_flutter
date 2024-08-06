@@ -108,40 +108,49 @@ class _InsertProductPageState extends State<InsertProductPage> {
       ),
     );
   }
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      final codigo = int.parse(_codigoController.text);
-      final nombre = _nombreController.text;
-      final precio = double.parse(_precioController.text);
-      final existencias = int.parse(_existenciasController.text);
-      final descripcion = _descripcionController.text;
-
       try{
+        final codigo = int.parse(_codigoController.text);
+        final nombre = _nombreController.text;
+        final precio = double.parse(_precioController.text);
+        final existencias = int.parse(_existenciasController.text);
+        final descripcion = _descripcionController.text;
         final product = ProductDto(
             codigoProducto: codigo,
             descripcion: descripcion,
             existencias: existencias,
             fechaIngreso: DateTime.now(),
             nombre: nombre,
-            precio: precio
+            precio: precio,
+
         );
-        _insertProductsService.addProductToDatabase(product);
+        await _insertProductsService.addProductToDatabase(product);
         _showAlertDialog(context, "EXITO", "Se ha registrado el producto de manera exitosa",Colors.green, goToTabPage);
       }catch(e){
-        print("HA OCURRIDO UN ERROR");
+        if(e.toString().contains('UNIQUE constraint failed')){
+          print("HA OCURRIDO UN ERROR: $e");
+          _showAlertDialog(context, "ERROR", "El codigo ya fue registrado anteriormente",Colors.red, onError);
+        }else{
+          print("HA OCURRIDO UN ERROR: $e");
+          _showAlertDialog(context, "ERROR", "No se puedo registrar el producto",Colors.red, onError);
+        }
       }
     }
   }
 
   void goToTabPage() {
+    Navigator.of(context).pop();
     print('INVOCANDO METODO DE RETORNO');
     Navigator.pop(context, 'reload');
+  }
+  void onError() {
+    Navigator.of(context).pop();
   }
   Future<void> _showAlertDialog(BuildContext context, String title, String textContent, Color color, void Function() funcion) async {
     Widget okButton = TextButton(
       child: Text("OK"),
       onPressed: () {
-        Navigator.of(context).pop();
         funcion();
       },
     );
@@ -174,4 +183,6 @@ class _InsertProductPageState extends State<InsertProductPage> {
       },
     );
   }
+
+
 }

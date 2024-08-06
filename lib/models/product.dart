@@ -6,6 +6,7 @@ class Products extends Table{
   RealColumn get precio => real().named('precio')();
   IntColumn get existencias => integer().named('existencias')();
   TextColumn get descripcion => text().named('descripcion')();
+  IntColumn get isAvailable => integer().named('is_available')();
   DateTimeColumn get fechaIngreso => dateTime().nullable().named('fecha_ingreso')();
   @override
   Set<Column> get primaryKey => {codigo};

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:productos/database/database.dart';
+import 'package:productos/dto/product_dto.dart';
 import 'package:productos/pages/insert_product_page.dart';
 import 'package:productos/pages/tab_products_page.dart';
+import 'package:productos/provider/product_notifier.dart';
 import 'package:productos/router/routes.dart';
 import 'package:provider/provider.dart';
 
@@ -9,12 +12,27 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final db = AppDb();
   db.enableForeignKeys();
+  await initializeDateFormatting('es', null);
   final foreignKeys = await db.checkForeignKeys();
 
   print('Foreign keys enabled: $foreignKeys');
   runApp(
-    Provider<AppDb>(
-      create: (_) => db,
+    MultiProvider(
+      providers: [
+        Provider<AppDb>(
+          create: (_) => db,
+          child: MyApp(),
+        ),
+        ChangeNotifierProvider(
+            create: (_) => ProductNotifier(ProductDto(
+                precio: 0,
+                nombre: "",
+                existencias: 0,
+                descripcion: "",
+                codigoProducto: 0,
+                isAvailable: 0,
+                fechaIngreso: null))), // Inicializa con el producto adecuado
+      ],
       child: MyApp(),
     ),
   );
@@ -28,6 +46,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
